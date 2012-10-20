@@ -30,7 +30,9 @@ python-requests (With pip installed: pip install requests)
 The commands 'mysqldump' and 'mysql' must be in your $PATH.
 
 INSTALLATION:
-git clone
+git clone https://github.rackspace.com/tim-farley/python-rs-cdb-migrate.git .
+
+$./migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
 
 LIMITATIONS:
 The CDB API does not allow users to change passwords once they are created. The current script generates a
@@ -44,3 +46,6 @@ and the databases they belong to.
 
 KNOWN-BUGS:
 None yet, but I'm sure they're out there.
+
+LICENSE:
+No idea. Not sure what Rackspace allows.
