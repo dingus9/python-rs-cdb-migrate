@@ -20,7 +20,13 @@ Usage: migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-
                         default: use the volume size of the existing instance
                         valid volume sizes range from 1 to 50
   -v                 verbose output
-
+    (-v- NOT YET IMPLEMENTED -v-)
+  -c                 OPTIONAL: create a template file of the users on your instance
+                        You can edit the file to supply passwords for all of
+                        your users, and then re-import the file using the -p option
+  -p                 OPTIONAL: import files from 
+                        Import a JSON file containing all of your usernames/passwords
+                        
 PREREQUISITES:
 Python2.7+
 mysql-client (Ubuntu: apt-get install mysql-client | RedHat/CentOS: yum install mysql-client)
@@ -30,6 +36,8 @@ python-requests (With pip installed: pip install requests)
 The commands 'mysqldump' and 'mysql' must be in your $PATH.
 
 INSTALLATION:
+Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of the databases you want to migrate.
+
     Read only:
         git clone https://github.rackspace.com/tim-farley/python-rs-cdb-migrate.git
     Read/write:
