@@ -43,8 +43,8 @@ Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of t
     Read/write:
         git clone git@github.rackspace.com:tim-farley/python-rs-cdb-migrate.git
 
-$ cd python-rs-cdb-migrate
-$./migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
+    $ cd python-rs-cdb-migrate
+    $./migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
 
 LIMITATIONS:
 The CDB API does not allow users to change passwords once they are created. The current script generates a
@@ -53,7 +53,7 @@ the instance is created, and thus the passwords are locked-in. In a later update
 database users are created after the instance has already been setup. This way we can use existing passwords.
 
 Right now you must manually enter a password for each of your existing databases before the process can begin.
-I need to implement a -f/--file= command line argument that will read in a JSON formatted file of all usernames/passwords,
+I need to implement a -p/--password-file= command line argument that will read in a JSON formatted file of all usernames/passwords,
 and the databases they belong to.
 
 KNOWN-BUGS:
