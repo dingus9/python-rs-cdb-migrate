@@ -1,7 +1,7 @@
 python-rs-cdb-migrate
 =====================
 
-An end-user python script to migrate and resize CDB (DBaaS) instances.
+An end-user python script to migrate and/or resize CDB (DBaaS) instances.
 
 Uses the Cloud Databases API to clone a new instance based off an existing instance. Allows for quick resizing.
 
