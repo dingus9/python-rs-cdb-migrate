@@ -28,6 +28,7 @@ Uses the Cloud Databases API to clone a new instance based off an existing insta
                         Import a JSON file containing all of your usernames/passwords
                         
 PREREQUISITES:
+
     Python2.7+
     mysql-client (Ubuntu: apt-get install mysql-client | RedHat/CentOS: yum install mysql-client)
     pip (Most systems: easy_install pip | Ubuntu: apt-get install python-pip)
@@ -36,6 +37,7 @@ PREREQUISITES:
 The commands 'mysqldump' and 'mysql' must be in your $PATH.
 
 INSTALLATION:
+
 Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of the databases you want to migrate.
 
     Read only:
@@ -47,6 +49,7 @@ Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of t
     $./migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
 
 LIMITATIONS:
+
 The CDB API does not allow users to change passwords once they are created. The current script generates a
 random 8-character password for use in the new database. At this time, the script creates the users at the time
 the instance is created, and thus the passwords are locked-in. In a later update, it should be changed so that the
@@ -57,7 +60,9 @@ I need to implement a -p/--password-file= command line argument that will read i
 and the databases they belong to.
 
 KNOWN-BUGS:
+
 None yet, but I'm sure they're out there.
 
 LICENSE:
+
 No idea. Not sure what Rackspace allows.
