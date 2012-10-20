@@ -5,7 +5,7 @@ An end-user python script to migrate and/or resize CDB (DBaaS) instances.
 
 Uses the Cloud Databases API to clone a new instance based off an existing instance. Allows for quick resizing.
 
-Usage: migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
+    Usage: migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
 
     -r/--region=       sets the region, should be 'ord' or 'dfw'
     -u/--user=         Rackspace Cloud username of the customer who owns the instance
