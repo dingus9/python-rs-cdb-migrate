@@ -7,24 +7,24 @@ Uses the Cloud Databases API to clone a new instance based off an existing insta
 
 Usage: migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
 
-  -r/--region=       sets the region, should be 'ord' or 'dfw'
-  -u/--user=         Rackspace Cloud username of the customer who owns the instance
-  -k/--apikey=       API key for this Rackspace Cloud username
-  -i/--instanceid=   instance ID of the existing Cloud Database instance
-  -n/--name=         OPTIONAL: name of new Cloud Database instance
+    -r/--region=       sets the region, should be 'ord' or 'dfw'
+    -u/--user=         Rackspace Cloud username of the customer who owns the instance
+    -k/--apikey=       API key for this Rackspace Cloud username
+    -i/--instanceid=   instance ID of the existing Cloud Database instance
+    -n/--name=         OPTIONAL: name of new Cloud Database instance
                         default: use the name of the existing instance
-  -f/--flavor=       OPTIONAL: flavor (RAM) of new instance
+    -f/--flavor=       OPTIONAL: flavor (RAM) of new instance
                         default: use the flavor of the existing instance
                         valid flavors are: 512 / 1024 / 2048 / 4096
-  -d/--volume-size=  OPTIONAL: volume size (in gigabytes) of new instance
+    -d/--volume-size=  OPTIONAL: volume size (in gigabytes) of new instance
                         default: use the volume size of the existing instance
                         valid volume sizes range from 1 to 50
-  -v                 verbose output
-    (-v- NOT YET IMPLEMENTED -v-)
-  -c                 OPTIONAL: create a template file of the users on your instance
+    -v                 verbose output
+      (-v- NOT YET IMPLEMENTED -v-)
+    -c                 OPTIONAL: create a template file of the users on your instance
                         You can edit the file to supply passwords for all of
                         your users, and then re-import the file using the -p option
-  -p                 OPTIONAL: import files from 
+    -p                 OPTIONAL: import files from 
                         Import a JSON file containing all of your usernames/passwords
                         
 PREREQUISITES:
