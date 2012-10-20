@@ -1,4 +1,46 @@
 python-rs-cdb-migrate
 =====================
 
-A user python script to migrate and resize CDB (DBaaS) instances.
+An end-user python script to migrate and resize CDB (DBaaS) instances.
+
+Uses the Cloud Databases API to clone a new instance based off an existing instance. Allows for quick resizing.
+
+Usage: migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
+
+  -r/--region=       sets the region, should be 'ord' or 'dfw'
+  -u/--user=         Rackspace Cloud username of the customer who owns the instance
+  -k/--apikey=       API key for this Rackspace Cloud username
+  -i/--instanceid=   instance ID of the existing Cloud Database instance
+  -n/--name=         OPTIONAL: name of new Cloud Database instance
+                        default: use the name of the existing instance
+  -f/--flavor=       OPTIONAL: flavor (RAM) of new instance
+                        default: use the flavor of the existing instance
+                        valid flavors are: 512 / 1024 / 2048 / 4096
+  -d/--volume-size=  OPTIONAL: volume size (in gigabytes) of new instance
+                        default: use the volume size of the existing instance
+                        valid volume sizes range from 1 to 50
+  -v                 verbose output
+
+PREREQUISITES:
+Python2.7+
+mysql-client (Ubuntu: apt-get install mysql-client | RedHat/CentOS: yum install mysql-client)
+pip (Most systems: easy_install pip | Ubuntu: apt-get install python-pip)
+python-requests (With pip installed: pip install requests)
+
+The commands 'mysqldump' and 'mysql' must be in your $PATH.
+
+INSTALLATION:
+git clone
+
+LIMITATIONS:
+The CDB API does not allow users to change passwords once they are created. The current script generates a
+random 8-character password for use in the new database. At this time, the script creates the users at the time
+the instance is created, and thus the passwords are created. In a later update, it should be changed so that the
+users are created after the instance has been setup. This way we can use existing passwords.
+
+Right now you must manually enter a password for each of your existing databases before the process can begin.
+I need to implement a -f/--file= command line argument that will read in a JSON formatted file of all usernames/passwords,
+and the databases they belong to.
+
+KNOWN-BUGS:
+None yet, but I'm sure they're out there.
