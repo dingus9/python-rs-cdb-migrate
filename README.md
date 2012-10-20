@@ -28,10 +28,10 @@ Uses the Cloud Databases API to clone a new instance based off an existing insta
                         Import a JSON file containing all of your usernames/passwords
                         
 PREREQUISITES:
-Python2.7+
-mysql-client (Ubuntu: apt-get install mysql-client | RedHat/CentOS: yum install mysql-client)
-pip (Most systems: easy_install pip | Ubuntu: apt-get install python-pip)
-python-requests (With pip installed: pip install requests)
+    Python2.7+
+    mysql-client (Ubuntu: apt-get install mysql-client | RedHat/CentOS: yum install mysql-client)
+    pip (Most systems: easy_install pip | Ubuntu: apt-get install python-pip)
+    python-requests (With pip installed: pip install requests)
 
 The commands 'mysqldump' and 'mysql' must be in your $PATH.
 
