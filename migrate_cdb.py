@@ -26,14 +26,21 @@ def main():
     var_instance_name = None
     var_flavor = None
     var_volume_size = None
+    var_template_file = None
+    var_infile = None
 
     #TODO: Make this sound professional.
     motd = """Yada yada. We're not responsible. Use at your own peril.
 This script will create a new database instance and copy yo shiz over to that database.
+
+If you wish to create your users from a template file, make sure that you correctly update the password for
+ALL users in the template file to correspond to your existing database passwords, otherwise your database
+might not copy.
+
 Is that cool?"""
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "vr:u:k:i:n:f:d:", ["region=", "user=", "apikey=", "instanceid=", "name=", "flavor=", "volumesize="])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "vr:u:k:i:n:f:d:c:l:", ["region=", "user=", "apikey=", "instanceid=", "name=", "flavor=", "volumesize=", "create-template=", "load-template="])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -54,6 +61,10 @@ Is that cool?"""
             var_instanceid = a
         elif o in ("-n", "--name"):
             var_instance_name = a
+        elif o in ("-c", "--create-template"):
+            var_template_file = a
+        elif o in ("-l", "--load-template"):
+            var_infile = a
         elif o in ("-f", "--flavor"):
             if a == "512":
                 var_flavor = "1"
@@ -87,16 +98,36 @@ Is that cool?"""
         print "Authentication error: " + str(e)
         sys.exit(1)
 
+    if var_template_file:
+        try:
+            create_database_users_template(var_region, var_tenantid, var_instanceid, var_token, var_template_file)
+            print "File written to " + var_template_file + ". Edit this file and replace all instances of the words 'REPLACE_ME' to match the current user passwords of your database."
+            sys.exit(0)
+        except IOError, e:
+            print "Error writing to file."
+            print str(e)
+            sys.exit(1)
+
+
     linebreak()
     if confirm(motd):
         linebreak()
         try:
             print "Gathering information and generating API calls."
-            users = get_database_users(var_region, var_tenantid, var_instanceid, var_token)
+            if var_infile:
+                try:
+                    print "Using pre-generated template file to create users."
+                    users = get_database_users_from_file(var_infile)
+                except IOError, e:
+                    print "Error reading input file: " + var_infile
+                    print str(e)
+                    sys.exit(1)
+            else:
+                users = get_database_users(var_region, var_tenantid, var_instanceid, var_token)
             payload = generate_payload(var_region, var_tenantid, var_instanceid, var_token, users, name=var_instance_name, flavor=var_flavor, volume_size=var_volume_size)
             if verbose:
                 linebreak()
-                print str(payload)
+                print json.dumps(payload, sort_keys=True, indent=4)
                 linebreak()
             new_instance = create_database_instance(var_region, var_tenantid, var_token, payload)
             print "Please wait while your new instance is created. This can take a few minutes."
@@ -122,7 +153,11 @@ Is that cool?"""
                             dbs_completed.append(value)
 
             for entry in tmp:
-                pw = getpass.getpass("Enter password for user " + entry['name'] + " on database " + entry['database'] + ": ")
+                if var_infile:
+                    pw = entry['password']
+                else:
+                    pw = getpass.getpass("Enter password for user " + entry['name'] + " on database " + entry['database'] + ": ")
+
                 run_command = "mysqldump --opt -h " + var_hostname + " -u " + entry['name'] + " -p" + pw + " " + entry['database'] + " | mysql -u " + entry['name'] + " -p" + entry['password'] + " -h " + new_instance['hostname'] + " " + entry['database'] 
                 print run_command 
                 output = subprocess.check_output(run_command, stderr=subprocess.STDOUT, shell=True)
@@ -144,16 +179,18 @@ Is that cool?"""
 
 def usage():
     print ""
-    print "Usage: " + os.path.basename(__file__) + " -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]"
+    print "Usage: " + os.path.basename(__file__) + " -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size> -c <outfile> -l <infile>]"
     print ""
-    print "  -r/--region=       sets the region, should be 'ord' or 'dfw'"
-    print "  -u/--user=         Rackspace Cloud username of the customer who owns the instance"
-    print "  -k/--apikey=       API key for this Rackspace Cloud username"
-    print "  -i/--instanceid=   instance ID of the existing Cloud Database instance"
-    print "  -n/--name=         OPTIONAL: name of new Cloud Database instance\n                        default: use the name of the existing instance"
-    print "  -f/--flavor=       OPTIONAL: flavor (RAM) of new instance\n                        default: use the flavor of the existing instance\n                        valid flavors are: 512 / 1024 / 2048 / 4096"
-    print "  -d/--volume-size=  OPTIONAL: volume size (in gigabytes) of new instance\n                        default: use the volume size of the existing instance\n                        valid volume sizes range from 1 to 50"
-    print "  -v                 verbose output" 
+    print "  -r/--region=           sets the region, should be 'ord' or 'dfw'"
+    print "  -u/--user=             Rackspace Cloud username of the customer who owns the instance"
+    print "  -k/--apikey=           API key for this Rackspace Cloud username"
+    print "  -i/--instanceid=       instance ID of the existing Cloud Database instance"
+    print "  -n/--name=             OPTIONAL: name of new Cloud Database instance\n                             default: use the name of the existing instance"
+    print "  -f/--flavor=           OPTIONAL: flavor (RAM) of new instance\n                             default: use the flavor of the existing instance\n                             valid flavors are: 512 / 1024 / 2048 / 4096"
+    print "  -d/--volume-size=      OPTIONAL: volume size (in gigabytes) of new instance\n                             default: use the volume size of the existing instance\n                             valid volume sizes range from 1 to 50"
+    print "  -c/--create-template=  OPTIONAL: create a template file based on the users in your instance\n                             You MUST edit the file to supply passwords for all of your existing\n                             database users and then re-import the file using the -l option"
+    print "  -l/--load-template=    OPTIONAL: import files from a template file.\n                             Import a JSON template file containing all of your usernames/passwords"
+    print "  -v                     verbose output" 
 
 def password_generator(size=8, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
@@ -202,6 +239,28 @@ def check_build_state(region, tenant, instance, token):
     elif r.json['instance']['status'] == "ERROR":
         raise BuildFailedException("The database instance creation failed. Contact Rackspace Cloud Support.")
     return False
+
+def get_database_users_from_file(filename):
+    f = open(filename, 'r')
+    data = f.read()
+    return json.loads(data)
+
+def create_database_users_template(region, tenant, instance, token, filename):
+    url = 'https://' + region + '.databases.api.rackspacecloud.com/v1.0/' + tenant + '/instances/' + instance + '/users'
+    headers = {'X-Auth-Token': token, 'Content-Type': 'application/json'}
+    r = requests.get(url, headers=headers)
+    check_http_response_status(r, "Exception raised in function: create_database_users_template()")
+    all_users = r.json['users']
+    for user in all_users:
+        user['password'] = "REPLACE_ME"
+        tmp = []
+        for db in user['databases']:
+            for key, value in db.iteritems():
+                tmp.append(value)
+    f = open(filename, 'w')
+    f.write(json.dumps(all_users, sort_keys=True, indent=4)) 
+    f.close()
+    #return all_users
 
 def get_database_users(region, tenant, instance, token):
     url = 'https://' + region + '.databases.api.rackspacecloud.com/v1.0/' + tenant + '/instances/' + instance + '/users'
