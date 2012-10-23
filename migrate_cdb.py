@@ -1,19 +1,19 @@
+import getopt, sys, json, requests, random, string, os, math, time, subprocess, getpass, copy
+sys.path.append('./lib')
 from cdb import *
 from rsauth import *
-import getopt, sys, json, requests, random, string, os, math, time, subprocess, getpass
-	
 	
 def main():
 	#TODO: Make this sound professional.
-	var_username = None
-	var_apikey = None
-	var_region = None
-	var_instanceid = None
-	var_flavor = None
-	var_volume_size = None
-	var_template_file = None
-	var_infile = None
-	var_instance_name = None
+	opt_username = None
+	opt_apikey = None
+	opt_region = None
+	opt_instance_id = None
+	opt_flavor_id = None
+	opt_volume_size = None
+	opt_template_file = None
+	opt_infile = None
+	opt_instance_name = None
 	motd = """Yada yada. We're not responsible. Use at your own peril.
 This script will create a new database instance and copy yo shiz over to that database.
 
@@ -36,35 +36,35 @@ Is that cool?"""
 			verbose = True
 		elif o in ("-r", "--region"):
 			if a.lower() == "dfw":
-				var_region = region.dfw
+				opt_region = region.dfw
 			elif a.lower() == "ord":
-				var_region = region.ord
+				opt_region = region.ord
 			elif a.lower() == "lon":
-				var_region = region.lon
+				opt_region = region.lon
 			else:
 				print "Valid regions are ORD / DFW / LON"
 				sys.exit(1)
 		elif o in ("-u", "--user"):
-			var_username = a
+			opt_username = a
 		elif o in ("-k", "--apikey"):
-			var_apikey = a
+			opt_apikey = a
 		elif o in ("-i", "--instanceid"):
-			var_instanceid = a
+			opt_instance_id = a
 		elif o in ("-n", "--name"):
-			var_instance_name = a
+			opt_instance_name = a
 		elif o in ("-c", "--create-template"):
-			var_template_file = a
+			opt_template_file = a
 		elif o in ("-l", "--load-template"):
-			var_infile = a
+			opt_infile = a
 		elif o in ("-f", "--flavor"):
 			if a == "512":
-				var_flavor = "1"
+				opt_flavor_id = "1"
 			elif a == "1024":
-				var_flavor = "2"
+				opt_flavor_id = "2"
 			elif a == "2048":
-				var_flavor = "3"
+				opt_flavor_id = "3"
 			elif a == "4096":
-				var_flavor = "4"
+				opt_flavor_id = "4"
 			else:
 				print "Valid flavors are: 512 / 1024 / 2048 / 4096"
 				sys.exit(1)		   
@@ -73,78 +73,113 @@ Is that cool?"""
 			if sz < 1 or sz > 50:
 				print "Volume size must be a whole number between 1 and 50."
 				sys.exit(1)
-			var_volume_size = sz
+			opt_volume_size = sz
 		else:
 			assert False, "unhandled option"
 
 	# Check for mandatory command line options.
-	if var_region == None or var_username == None or var_apikey == None or var_instanceid == None:
+	if opt_region == None or opt_username == None or opt_apikey == None or opt_instance_id == None:
 		usage()
 		sys.exit(1)
 
 	# Authenticate
 	try:
-		auth = RSAuth(var_username, var_apikey)
+		auth = RSAuth(opt_username, opt_apikey)
 	except requests.exceptions.HTTPError, e:
 		exit("Authentication error:", e)
 
 	# Create an instance object from the user's existing cdb instance
 	print "Gathering information and generating API calls."
 	try:
-		instance = cdb(var_region, var_instanceid, auth)
+		src_instance = cdb(opt_region, opt_instance_id, auth)
 	except requests.exceptions.HTTPError, e:
-		exit("Error retrieving statistics for your database instance: " + var_instanceid, e)
+		exit("Error retrieving statistics for your database instance: " + opt_instance_id, e)
 	
 	# We are going to write a template file and exit.
-	if var_template_file:
+	if opt_template_file:
 		try:
-			print "Writing template file to disk as: " + var_template_file
-			write_template(var_template_file, instance.users)
+			print "Writing template file to disk as: " + opt_template_file
+			write_template(opt_template_file, src_instance.users)
 			sys.exit(0)
 		except IOError, e:
 			exit("Error writing to file.", e)
 
 	# Read in template file. If we are not using a template file, users should be blank.
-	if var_infile:
+	if opt_infile:
 		try:
 			print "Using pre-generated template file to create users."
-			instance.users = read_template(var_infile)
-			instance.passwords_set = True
+			src_instance.users = read_template(opt_infile)
+			src_instance.passwords_set = True
 		except IOError, e:
-			exit("Error reading input file: " + var_infile, e)
-	
-	# Set some variables in our instance before we create it.
-	if var_flavor:
-		instance.flavor = "blah"
-	if var_volume_size:
-		instance.volume_size = var_volume_size
-	if var_instance_name:
-		instance.name = var_instance_name
+			exit("Error reading input file: " + opt_infile, e)
 
-	try:
-		instance.create()
-	except requests.exceptions.HTTPError, e:
-		exit("Error creating new instance: " + var_instanceid, e)
+	# Set our variables.
+	if opt_instance_name:
+		src_instance.name = opt_instance_name
+	if opt_flavor_id:
+		src_instance.flavor_id = opt_flavor_id
+	if opt_volume_size:
+		src_instance.volume_size = opt_volume_size
 		
-
-	print "Please wait while your new instance is created. This can take a few minutes."
-	for num in range(1, 20):
-		print "".ljust(num, '.')
-		time.sleep(30)
-		if check_build_state(var_region, var_tenantid, new_instance['instanceid'], var_token):
-			print "Your database instance has completed.\nHostname: " + new_instance['hostname']
-			break
-		if num == 19:
-		   print "Timeout waiting for database to build. Contact Rackspace Cloud Support."
-		   sys.exit(1)
+	try:
+		dst_instance = src_instance.create()
+	except requests.exceptions.HTTPError, e:
+		exit("Error creating new instance: " + opt_instance_id, e)
+		
+	try:	
+		print "Please wait while your new instance is created. This can take a few minutes."
+		for num in range(1, 20):
+			print "".ljust(num, '.')
+			time.sleep(30)
+			status = src_instance.build_status(dst_instance['endpoint'])
+			
+			if status == "ACTIVE":
+				print "Your database instance has been created.\nHostname: " + dst_instance['hostname']
+				break
+			elif status == "ERROR":
+				print "Your database instance failed to build. Please try again and contact Rackspace Cloud Support to remove the failed build."
+				sys.exit(1)
+			if num == 19:
+			   print "Timeout waiting for database to build. Please try again and contact Rackspace Cloud Support to remove the failed build."
+			   sys.exit(1)
+	except requests.exceptions.HTTPError, e:
+		exit("Error creating new instance: " + opt_instance_id, e)
 	
-	linebreak()
-	if confirm(motd):
+	dbs_completed = []
+	for user in src_instance.users:
+		for attempt in range(0,2):
+			pw = getpass.getpass("Enter password for " + user['name'])
+			# Check to see if the password is good...
+			command = "mysql -h " + src_instance.hostname + " -u " + user['name'] + " -p" + pw + " " + "-e 'select 1 from dual;'" + " " + db['name']
+			exit_code = subprocess.check_call(command, stderr=subprocess.STDOUT, shell=True)
+			if exit_code != 0:
+				print "Incorrect password for " + user['name']
+				if attempt == 2:
+					print "Three unsuccessful attempts. We'll try another user who might be able to copy this database."
+			elif exit_code == 0:
+				print "Preparing to copy any uncopided databases for this user..."
+				src_instance.add_user(user['name'], pw, user['databases'])
+				# How long does the API take to complete this? hrmm?
+				time.sleep(5)
+				for db in user['databases']:
+					# Only copy a database if it hasn't been completed already.
+					if db['name'] not in dbs_completed:
+						print "Copying database " + db['name'] + ". This can take a while... Please be patient."
+						command = "mysqldump --opt -h " + src_instance.hostname + " -u " + user['name'] + " -p" + pw + " " + db['name'] + " | mysql -u " + user['name'] + " -p" + pw + " -h " + dst_instance['hostname'] + " " + db['name']
+						exit_code = subprocess.check_call(command, stderr=subprocess.STDOUT, shell=True)
+						if exit_code == 0:
+							dbs_completed.append(db['name'])
+						elif exit_code != 0:
+							print "Hrm. It looks like this db copy failed. You might have to copy this one manually."
+	
+	print "COMPLETE!"
+	print "The following databases were copied successfully: " + ', '.join(dbs_completed)
+
 
 	
 def exit(msg="", e=""):
 	print msg
-	print str(e)
+	print e.message
 	sys.exit(1)
 
 def read_template(filename):
@@ -153,8 +188,6 @@ def read_template(filename):
 	return json.loads(data)
 
 def write_template(filename, users):
-	for user in users:
-		user['password'] = 'CHANGE_ME'
 	f = open(filename, 'w')
 	f.write(json.dumps(users, sort_keys=True, indent=4))
 	f.close()

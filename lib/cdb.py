@@ -1,14 +1,19 @@
 import requests, rsauth, json, math, sys
-from dbs import *
 
 class cdb:
 
 	def __init__(self, region, instance_id, auth):
 		self.endpoint = auth.get_endpoint(rsauth.service.clouddatabases, region) + '/instances/' + instance_id
 		self.base_endpoint = auth.get_endpoint(rsauth.service.clouddatabases, region) + '/instances'
-
+		self.region = region
+		self.headers = auth.headers
+		self.instance_id = instance_id
+		self.auth = auth
+		self.instance_id = instance_id
+						
 		for api_correction in range(0,5):
-			r = requests.get(self.endpoint, headers=auth.headers)
+			r = requests.get(self.endpoint, headers=self.headers)
+			r.raise_for_status()
 			# The API does not always return 'used'. Let's try to get it!
 			try:
 				self.volume_used = r.json['instance']['volume']['used']
@@ -18,6 +23,9 @@ class cdb:
 				# 'used' doesn't exist. Let's try again...
 				continue
 				
+		#for item in r.json['instance']['links']:
+		#	if item['rel'] == "self":
+		#		self.endpoint = item['href']
 		self.status = r.json['instance']['status']
 		self.updated = r.json['instance']['updated']
 		self.name = r.json['instance']['name']
@@ -25,14 +33,55 @@ class cdb:
 		self.hostname = r.json['instance']['hostname']
 		self.volume_size = r.json['instance']['volume']['size']
 		self.flavor_id = r.json['instance']['flavor']['id']
-		self.headers = auth.headers
 		self.passwords_set = False
 		self.databases = self.__get_databases()
 		self.users = self.__get_users()
-		self.region = region
+
+	
+	def create(self):
+		r = requests.post(self.base_endpoint, data=self.json(), headers=self.headers)
+		r.raise_for_status()
+		for item in r.json['instance']['links']:
+			if item['rel'] == "self":
+				endpoint = item['href']
+		return { 'hostname': r.json['instance']['hostname'], 'endpoint': endpoint, 'id' : r.json['instance']['id'] }
+	
+	def build_status(self, endpoint):
+		r = requests.get(endpoint, headers=self.headers)
+		r.raise_for_status()
+		return r.json['instance']['status']
+	
+	def add_user(self, username, password, databases):
+		payload = json.dumps({
+		    "users": [ 
+		        {
+		            "databases": [
+						databases
+		            ], 
+		            "name": username, 
+		            "password": password
+		        }
+		    ]
+		}, sort_keys=True, indent=4)
+		r = requests.post(self.endpoint + "/users", headers=self.headers)
+		r.raise_for_status()
+				
+			
+	def __get_users(self):
+		r = requests.get(self.endpoint + "/users", headers=self.headers)
+		r.raise_for_status()
+		for user in r.json['users']:
+			user['password'] = 'CHANGE_ME'
+		return r.json['users']
 		
+	def __get_databases(self):
+		r = requests.get(self.endpoint + "/databases", headers=self.headers)
+		r.raise_for_status()
+		return r.json['databases']
+
+	def json(self):
 		# A JSON string suitable for creating a new instance based on this one.
-		self.json = json.dumps({
+		return json.dumps({
 		    "instance": {
 		        "databases": 
 					self.databases
@@ -47,27 +96,5 @@ class cdb:
 		        }
 		    }
 		}, sort_keys=True, indent=4)
-	
-	def create(self):
-		"""Returns False if the volume is not large enough. Throws an exception if there is a problem with the API"""
-		if math.ceil(float(self.volume_used)) > self.volume_size:
-			return False
-		r = requests.post(self.base_endpoint, data=self.json, headers=self.headers)
-		return True
-	
-	def update_status(self):
-		r = requests.get(self.endpoint, headers=self.headers)
-		self.status = r.json['instance']['status']
-		return self.status
-		
-	def __get_users(self):
-		r = requests.get(self.endpoint + "/users", headers=self.headers)
-		return r.json['users']
-		
-	def __get_databases(self):
-		r = requests.get(self.endpoint + "/databases", headers=self.headers)
-		return r.json['databases']
-	
-	def http_response(r):
-		pass
+
 		
