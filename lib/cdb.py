@@ -51,28 +51,36 @@ class cdb:
 		r.raise_for_status()
 		return r.json['instance']['status']
 	
-	def add_user(self, username, password, databases):
+	def add_user(self, username, password, databases, endpoint):
 		payload = json.dumps({
 		    "users": [ 
 		        {
-		            "databases": [
-						databases
-		            ], 
+		            "databases":
+				databases
+		            , 
 		            "name": username, 
 		            "password": password
 		        }
 		    ]
 		}, sort_keys=True, indent=4)
-		r = requests.post(self.endpoint + "/users", headers=self.headers)
+		r = requests.post(endpoint + "/users", data=payload, headers=self.headers)
 		r.raise_for_status()
 				
-			
+	def root_enabled(self):
+		r = requests.get(self.endpoint + "/root", headers=self.headers)
+		r.raise_for_status()
+		if r.json['rootEnabled'] == "true":
+			return True
+		else:
+			return False
+		
 	def __get_users(self):
 		r = requests.get(self.endpoint + "/users", headers=self.headers)
 		r.raise_for_status()
-		for user in r.json['users']:
+		all_users = r.json['users']
+		for user in all_users:
 			user['password'] = 'CHANGE_ME'
-		return r.json['users']
+		return all_users
 		
 	def __get_databases(self):
 		r = requests.get(self.endpoint + "/databases", headers=self.headers)
