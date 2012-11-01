@@ -119,8 +119,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
 	if opt_infile:
 		try:
 			print "Using pre-generated template file to create users."
+			print "Verifying user passwords from template."
 			src_instance.users = read_template(opt_infile)
 			src_instance.passwords_set = True
+
+			# Make sure the user can login
+			for user in src_instance.users:
+				command = "mysql -h " + src_instance.hostname + " -u " + user['name'] + " -p" + user['password'] + " " + "-e 'select 1 from dual;'" + " " + user['databases'][0]['name']
+				exit_code = subprocess.check_call(command + ' > /dev/null', stderr=subprocess.STDOUT, shell=True)
+				if exit_code != 0:
+					print "Unable to login to database instance for user. Check the passwords in your template file and try again."
+
+		except subprocess.CalledProcessError, e:
+			print "Unable to login to database instance for this user. Check the passwords in your template file and try again."
+			sys.exit(1)
 		except IOError, e:
 			exit("Error reading input file: " + opt_infile, e)
 
@@ -186,12 +198,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
 
 	if opt_infile:
 		for user in src_instance.users:
-			print "Preparing to copy any uncopided databases for user " + user['name']
+			print "Preparing to copy any uncopied databases for user " + user['name']
 			for db in user['databases']:
 				if db['name'] not in dbs_completed:
 					print "Copying database " + db['name'] + ". This can take a while... Please be patient."
 					command = "mysqldump --opt -h " + src_instance.hostname + " -u " + user['name'] + " -p" + user['password'] + " " + db['name'] + " | mysql -u " + user['name'] + " -p" + user['password'] + " -h " + dst_instance['hostname'] + " " + db['name']
-					exit_code = subprocess.check_call(command, stderr=subprocess.STDOUT, shell=True)
+					exit_code = subprocess.check_call(command + ' > /dev/null', stderr=subprocess.STDOUT, shell=True)
 					if exit_code == 0:
 						dbs_completed.append(db['name'])
 					elif exit_code != 0:
@@ -204,7 +216,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
 				# Check to see if the password is good...
 				command = "mysql -h " + src_instance.hostname + " -u " + user['name'] + " -p" + pw + " " + "-e 'select 1 from dual;'" + " " + user['databases'][0]['name']
 				try:
-					exit_code = subprocess.check_call(command, stderr=subprocess.STDOUT, shell=True)
+					exit_code = subprocess.check_call(command  + ' > /dev/null', stderr=subprocess.STDOUT, shell=True)
 				except subprocess.CalledProcessError, e:
 					if attempt == 2:
 						print "Three unsuccessful attempts. We'll try another user who might be able to copy this database."
@@ -216,7 +228,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
 					if attempt == 2:
 						print "Three unsuccessful attempts. We'll try another user who might be able to copy this database."
 				elif exit_code == 0:
-					print "Preparing to copy any uncopided databases for this user..."
+					print "Preparing to copy any uncopied databases for this user..."
 					src_instance.add_user(user['name'], pw, user['databases'], dst_instance['endpoint'])
 					# How long does the API take to complete this? hrmm?
 					time.sleep(5)
@@ -225,7 +237,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
 						if db['name'] not in dbs_completed:
 							print "Copying database " + db['name'] + ". This can take a while... Please be patient."
 							command = "mysqldump --opt -h " + src_instance.hostname + " -u " + user['name'] + " -p" + pw + " " + db['name'] + " | mysql -u " + user['name'] + " -p" + pw + " -h " + dst_instance['hostname'] + " " + db['name']
-							exit_code = subprocess.check_call(command, stderr=subprocess.STDOUT, shell=True)
+							exit_code = subprocess.check_call(command + ' > /dev/null', stderr=subprocess.STDOUT, shell=True)
 							if exit_code == 0:
 								dbs_completed.append(db['name'])
 							elif exit_code != 0:
