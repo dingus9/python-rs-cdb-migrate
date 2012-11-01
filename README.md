@@ -49,10 +49,7 @@ Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of t
 
 LIMITATIONS:
 
-The CDB API does not allow users to change passwords once they are created. The current script generates a
-random 8-character password for use in the new database. At this time, the script creates the users at the time
-the instance is created, and thus the passwords are locked-in. In a later update, it should be changed so that the
-database users are created after the instance has already been setup. This way we can use existing passwords.
+This script must be run from a Cloud Server in the same datacenter (region) as the database instance you are cloning.
 
 KNOWN-BUGS:
 
@@ -60,10 +57,23 @@ None yet, but I'm sure they're out there.
 
 USAGE TUTORIAL: COMING SOON
 
-You can now use the -c/--create-template= option to generate a template based on your existing database users.
-You must edit the file manually to replace all occurances of "REPLACE_ME" with the existing passwords of your
-database. You can then re-import this file using the -l/--load-template= option to duplicate your existing CDB
-instance completely.
+Using the -c <filename> option, you can create a users template file. You MUST edit this file and replace all
+instances of "CHANGE_ME" with your database user password. Here is an example template:
+
+    [
+        {
+            "databases": [
+                {
+                    "name": "sampledb"
+                }
+            ], 
+            "name": "demouser", 
+            "password": "CHANGE_ME"
+        }
+    ]
+
+In the example above, you would replace "CHANGE_ME" with the password for your user 'demouser'.
+IF YOU DO NOT MAKE THIS CHANGE, YOUR DATABASES WILL NOT BE COPIED, AND YOUR USERS WILL ALL HAVE GENERIC PASSWORDS!
 
 LICENSE:
 
