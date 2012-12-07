@@ -51,6 +51,8 @@ LIMITATIONS:
 
 This script must be run from a Cloud Server in the same datacenter (region) as the database instance you are cloning.
 
+We STRONGLY SUGGEST using screen on your ssh session to your Rackspace cloud server when running this tool.  This will ensure that if you lose your connection while running the script, that it continues to run.  For a tutorial on screen please see:  http://www.howtoforge.com/linux_screen
+
 KNOWN-BUGS:
 
 None yet, but I'm sure they're out there.
