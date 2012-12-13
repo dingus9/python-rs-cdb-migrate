@@ -40,9 +40,9 @@ INSTALLATION:
 Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of the databases you want to migrate.
 
     Read only:
-        git clone https://github.rackspace.com/tim-farley/python-rs-cdb-migrate.git
+        git clone https://github.com/tofarley/python-rs-cdb-migrate.git
     Read/write:
-        git clone git@github.rackspace.com:tim-farley/python-rs-cdb-migrate.git
+        git clone git@github.com:tofarley/python-rs-cdb-migrate.git
 
     $ cd python-rs-cdb-migrate
     $./migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
