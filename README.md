@@ -31,7 +31,7 @@ PREREQUISITES:
     Python2.7+
     mysql-client (Ubuntu: apt-get install mysql-client | RedHat/CentOS: yum install mysql-client)
     pip (Most systems: easy_install pip | Ubuntu: apt-get install python-pip)
-    python-requests (With pip installed: pip install requests)
+    python-requests (With pip installed: pip install -I requests==0.14.1)
 
 The commands 'mysqldump' and 'mysql' must be in your $PATH.
 
