@@ -40,9 +40,9 @@ INSTALLATION:
 Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of the databases you want to migrate.
 
     Read only:
-        git clone https://github.rackspace.com/tim-farley/python-rs-cdb-migrate.git
+        git clone https://github.com/tofarley/python-rs-cdb-migrate.git
     Read/write:
-        git clone git@github.rackspace.com:tim-farley/python-rs-cdb-migrate.git
+        git clone git@github.com:tofarley/python-rs-cdb-migrate.git
 
     $ cd python-rs-cdb-migrate
     $./migrate_cdb.py -r <region> -u <username> -k <api_key> -i <instance_id> [-n <instance_name> -f <flavor> -d <volume_size>]
@@ -50,6 +50,8 @@ Install migrate_cdb.py onto a RS Cloud Server in the same region/datacenter of t
 LIMITATIONS:
 
 This script must be run from a Cloud Server in the same datacenter (region) as the database instance you are cloning.
+
+We STRONGLY SUGGEST using screen on your ssh session to your Rackspace cloud server when running this tool.  This will ensure that if you lose your connection while running the script, that it continues to run.  For a tutorial on screen please see:  http://www.howtoforge.com/linux_screen
 
 KNOWN-BUGS:
 
@@ -77,4 +79,14 @@ IF YOU DO NOT MAKE THIS CHANGE, YOUR DATABASES WILL NOT BE COPIED, AND YOUR USER
 
 LICENSE:
 
-No idea. Not sure what Rackspace allows.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
