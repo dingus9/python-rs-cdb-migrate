@@ -89,8 +89,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
 		sys.exit(1)
 
 	# Authenticate
+	auth_endpoint = ''
+	if opt_region in ('LON',):
+		auth_endpoint = 'uk'
+	elif opt_region in ('ORD', 'DFW'):
+		auth_endpoint = 'us'
+	
+	print opt_region
+	print auth_endpoint
+
 	try:
-		auth = RSAuth(opt_username, opt_apikey)
+		auth = RSAuth(opt_username, opt_apikey, auth_endpoint)
 	except requests.exceptions.HTTPError, e:
 		exit("Authentication error:", e)
 

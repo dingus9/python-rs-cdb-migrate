@@ -16,7 +16,13 @@ class RSAuth:
         
 
     # authenticate() will be called for us when we create an object, but we want to make it callable on it's own
-    def authenticate(self, username, apikey, auth_endpointurl='https://identity.api.rackspacecloud.com/v2.0/tokens'):
+    def authenticate(self, username, apikey, auth_region='us'):
+	
+	if auth_region == 'uk':
+		auth_endpointurl = 'https://lon.identity.api.rackspacecloud.com/v2.0/tokens'
+	elif auth_region == 'us':
+		auth_endpointurl = 'https://identity.api.rackspacecloud.com/v2.0/tokens'
+
         auth_payload = {
             "auth": {
                "RAX-KSKEY:apiKeyCredentials": {  
